@@ -1,4 +1,4 @@
-"# iot-01-Reto-capa-dispositivos" 
-"Integrantes" 
-"- Daniel Quiceno Calder¢n " 
-"- Maria Angelica  Gaitan Sanchez " 
+# Reto-capa-dispositivos<br> 
+***Integrantes***<br> 
+- Daniel Quiceno Calder√≥n<br> 
+- Maria Angelica  Gaitan Sanchez<br> 
