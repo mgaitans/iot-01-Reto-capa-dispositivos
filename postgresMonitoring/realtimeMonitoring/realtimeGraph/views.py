@@ -4,6 +4,7 @@ from os import name
 import time
 
 from django.db.models.aggregates import Count
+from sqlalchemy import true
 from realtimeMonitoring.utils import getCityCoordinates
 from typing import Dict
 import requests
@@ -679,16 +680,17 @@ def add_str(str1, str2):
 def get_data_map_json(request, **kwargs):
     data_result = {}
 
-    measureParam = kwargs.get("measure", None)
-    selectedMeasure = None
+    measureParam = kwargs.get("measure", None)    
     measurements = Measurement.objects.all()
+    selectedMeasure = None
+    stations = Station.objects.filter(active=True)
+    locations = Location.objects.all()
 
     if measureParam != None:
         selectedMeasure = Measurement.objects.filter(name=measureParam)[0]
     elif measurements.count() > 0:
         selectedMeasure = measurements[0]
-
-    locations = Location.objects.all()
+    
     try:
         start = datetime.fromtimestamp(
             float(request.GET.get("from", None)) / 1000
@@ -700,6 +702,7 @@ def get_data_map_json(request, **kwargs):
             float(request.GET.get("to", None)) / 1000)
     except:
         end = None
+
     if start == None and end == None:
         start = datetime(2021, 6, 1)
         start = start - dateutil.relativedelta.relativedelta(weeks=1)
@@ -738,6 +741,45 @@ def get_data_map_json(request, **kwargs):
     endFormatted = end.strftime("%d/%m/%Y") if end != None else " "
 
     data_result["locations"] = [loc.str() for loc in locations]
+    data_result["start"] = startFormatted
+    data_result["end"] = endFormatted
+    data_result["data"] = data
+
+
+
+    for station in stations:
+        dataMeasure = []
+        for measures in measurements:
+            stationData = Data.objects.filter(
+                station=stations,
+                measurement_name=measures.name,
+                time_gte=start.date(),
+                time_lte = end.date()
+
+            )        
+        
+        if stationData.count() <= 0:
+            continue
+        minVal = stationData.aggregate(
+            Min('value'))['value__min']
+        maxVal = stationData.aggregate(
+            Max('value'))['value__max']
+        avgVal = stationData.aggregate(
+            Avg('value'))['value__avg']
+        data.append({
+            'name': f'{station.city.name}, {station.state.name}, {station.country.name}',
+            'lat': station.lat,
+            'lng': station.lng,
+            'population': stations.count(),
+            'min': minVal if minVal != None else 0,
+            'max': maxVal if maxVal != None else 0,
+            'avg': round(avgVal if avgVal != None else 0, 2),
+        })
+
+    startFormatted = start.strftime("%d/%m/%Y") if start != None else " "
+    endFormatted = end.strftime("%d/%m/%Y") if end != None else " "
+
+    data_result["stations"] = [loc.str() for loc in stations]
     data_result["start"] = startFormatted
     data_result["end"] = endFormatted
     data_result["data"] = data
