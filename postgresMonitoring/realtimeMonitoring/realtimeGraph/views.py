@@ -4,7 +4,6 @@ from os import name
 import time
 
 from django.db.models.aggregates import Count
-from sqlalchemy import true
 from realtimeMonitoring.utils import getCityCoordinates
 from typing import Dict
 import requests
@@ -680,17 +679,16 @@ def add_str(str1, str2):
 def get_data_map_json(request, **kwargs):
     data_result = {}
 
-    measureParam = kwargs.get("measure", None)    
-    measurements = Measurement.objects.all()
+    measureParam = kwargs.get("measure", None)
     selectedMeasure = None
-    stations = Station.objects.filter(active=True)
-    locations = Location.objects.all()
+    measurements = Measurement.objects.all()
 
     if measureParam != None:
         selectedMeasure = Measurement.objects.filter(name=measureParam)[0]
     elif measurements.count() > 0:
         selectedMeasure = measurements[0]
-    
+
+    locations = Location.objects.all()
     try:
         start = datetime.fromtimestamp(
             float(request.GET.get("from", None)) / 1000
@@ -702,7 +700,6 @@ def get_data_map_json(request, **kwargs):
             float(request.GET.get("to", None)) / 1000)
     except:
         end = None
-
     if start == None and end == None:
         start = datetime(2021, 6, 1)
         start = start - dateutil.relativedelta.relativedelta(weeks=1)
@@ -713,6 +710,7 @@ def get_data_map_json(request, **kwargs):
     elif start == None:
         start = datetime(2021, 6, 30)
     
+
     data = []
 
     for location in locations:
