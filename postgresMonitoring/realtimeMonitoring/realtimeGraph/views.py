@@ -714,9 +714,8 @@ def get_data_map_json(request, **kwargs):
 
     data = []
     for station in stations:
-        stations = Station.objects.filter(station=station)
         stationData = Data.objects.filter(
-            station__in=stations, 
+            station=station, 
             measurement__name=selectedMeasure.name,  
             time__gte=start.date(), 
             time__lte=end.date())
@@ -729,7 +728,6 @@ def get_data_map_json(request, **kwargs):
             Max('value'))['value__max']
         avgVal = stationData.aggregate(
             Avg('value'))['value__avg']
-
         data.append({
             'name': f'{station.city.name}, {station.state.name}, {station.country.name}',
             'lat': station.lat,
@@ -741,12 +739,35 @@ def get_data_map_json(request, **kwargs):
         })
 
 
-    
+    for location in locations:
+        stations = Station.objects.filter(location=location)
+        locationData = Data.objects.filter(
+            station__in=stations, 
+            measurement__name=selectedMeasure.name,  
+            time__gte=start.date(), 
+            time__lte=end.date())
+        if locationData.count() <= 0:
+            continue
+        minVal = locationData.aggregate(
+            Min('value'))['value__min']
+        maxVal = locationData.aggregate(
+            Max('value'))['value__max']
+        avgVal = locationData.aggregate(
+            Avg('value'))['value__avg']
+        data.append({
+            'name': f'{location.city.name}, {location.state.name}, {location.country.name}',
+            'lat': location.lat,
+            'lng': location.lng,
+            'population': stations.count(),
+            'min': minVal if minVal != None else 0,
+            'max': maxVal if maxVal != None else 0,
+            'avg': round(avgVal if avgVal != None else 0, 2),
+        })
+
     startFormatted = start.strftime("%d/%m/%Y") if start != None else " "
     endFormatted = end.strftime("%d/%m/%Y") if end != None else " "
 
-    data_result["stations"] = [loc.str() for loc in stations]
-    
+    data_result["locations"] = [loc.str() for loc in locations]
     data_result["start"] = startFormatted
     data_result["end"] = endFormatted
     data_result["data"] = data
