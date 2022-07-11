@@ -776,16 +776,15 @@ def get_data_map_json(request, **kwargs):
     data_result = {}
 
     measureParam = kwargs.get("measure", None)
-    measurements = Measurement.objects.all()
     selectedMeasure = None
     measurements = Measurement.objects.all()
-    stations = Station.objects.filter(active=True)
 
     if measureParam != None:
         selectedMeasure = Measurement.objects.filter(name=measureParam)[0]
     elif measurements.count() > 0:
-        selectedMeasure = measurements[0]    
+        selectedMeasure = measurements[0]
 
+    locations = Location.objects.all()
     try:
         start = datetime.fromtimestamp(
             float(request.GET.get("from", None)) / 1000
@@ -798,50 +797,46 @@ def get_data_map_json(request, **kwargs):
     except:
         end = None
     if start == None and end == None:
-        start = datetime.now(2021, 6, 1)
+        start = datetime.now()
         start = start - dateutil.relativedelta.relativedelta(weeks=1)
-        end = datetime.now(2021, 6, 30)
+        end = datetime.now()
         end += dateutil.relativedelta.relativedelta(days=1)
     elif end == None:
-        end = datetime.now(2021, 6, 30)
+        end = datetime.now()
     elif start == None:
-        start = datetime.now(2021, 6, 1)
+        start = datetime.fromtimestamp(0)
 
     data = []
 
     start_ts = int(start.timestamp() * 1000000)
     end_ts = int(end.timestamp() * 1000000)
 
-
-    for stations in stations:
-        dataMeasure = []
-        for measures in  Measurement:
-            stationsData = Data.objects.filter(
-                station__in=stations, measurement__name=selectedMeasure.name,  time__gte=start.date(), time__lte=end.date()
-            )
-                
-        if stationsData.count() <= 0:
+    for location in locations:
+        stations = Station.objects.filter(location=location)
+        locationData = Data.objects.filter(
+            station__in=stations, measurement__name=selectedMeasure.name, time__gte=start_ts, time__lte=end_ts,
+        )
+        if locationData.count() <= 0:
             continue
-        minVal = stationsData.aggregate(
-            Min('value'))['value__min']
-        maxVal = stationsData.aggregate(
-            Max('value'))['value__max']
-        avgVal = stationsData.aggregate(
-            Avg('value'))['value__avg']
-        data.append({
-            'name': f'{stations.city.name}, {stations.state.name}, {stations.country.name}',
-            'lat': stations.lat,
-            'lng': stations.lng,
-            'population': stations.count(),
-            'min': minVal if minVal != None else 0,
-            'max': maxVal if maxVal != None else 0,
-            'avg': round(avgVal if avgVal != None else 0, 2),
-        })
+        minVal = locationData.aggregate(Min("min_value"))["min_value__min"]
+        maxVal = locationData.aggregate(Max("max_value"))["max_value__max"]
+        avgVal = locationData.aggregate(Avg("avg_value"))["avg_value__avg"]
+        data.append(
+            {
+                "name": f"{location.city.name}, {location.state.name}, {location.country.name}",
+                "lat": location.lat,
+                "lng": location.lng,
+                "population": stations.count(),
+                "min": minVal if minVal != None else 0,
+                "max": maxVal if maxVal != None else 0,
+                "avg": round(avgVal if avgVal != None else 0, 2),
+            }
+        )
 
     startFormatted = start.strftime("%d/%m/%Y") if start != None else " "
     endFormatted = end.strftime("%d/%m/%Y") if end != None else " "
 
-    data_result["stations"] = [loc.str() for loc in stations]
+    data_result["locations"] = [loc.str() for loc in locations]
     data_result["start"] = startFormatted
     data_result["end"] = endFormatted
     data_result["data"] = data
