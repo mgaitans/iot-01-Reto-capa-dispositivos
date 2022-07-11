@@ -720,6 +720,15 @@ def get_data_map_json(request, **kwargs):
             measurement__name=selectedMeasure.name,  
             time__gte=start.date(), 
             time__lte=end.date())
+        
+        if stationData.count() <= 0:
+            continue
+        minVal = stationData.aggregate(
+            Min('value'))['value__min']
+        maxVal = stationData.aggregate(
+            Max('value'))['value__max']
+        avgVal = stationData.aggregate(
+            Avg('value'))['value__avg']
 
 
     for location in locations:
