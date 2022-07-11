@@ -778,19 +778,22 @@ def get_data_map_json(request, **kwargs):
     measureParam = kwargs.get("measure", None)
     selectedMeasure = None
     measurements = Measurement.objects.all()
-
+    
     if measureParam != None:
         selectedMeasure = Measurement.objects.filter(name=measureParam)[0]
     elif measurements.count() > 0:
         selectedMeasure = measurements[0]
 
     locations = Location.objects.all()
+    stations  = Station.objects.all()
+
     try:
         start = datetime.fromtimestamp(
             float(request.GET.get("from", None)) / 1000
         )
     except:
         start = None
+
     try:
         end = datetime.fromtimestamp(
             float(request.GET.get("to", None)) / 1000)
@@ -805,9 +808,36 @@ def get_data_map_json(request, **kwargs):
         end = datetime(2021, 7, 1)
     elif start == None:
         start = datetime(2021, 6, 1)
-    data = []
+    
     start_ts = int(start.timestamp() * 1000000)
     end_ts = int(end.timestamp() * 1000000)
+    
+    data = []
+
+    for station in stations:
+        stationData = Data.objects.filter(
+            station=station, 
+            measurement__name=selectedMeasure.name,  
+            time__gte=start.date(), 
+            time__lte=end.date())
+        
+        if stationData.count() <= 0:
+            continue
+        minVal = stationData.aggregate(
+            Min('value'))['value__min']
+        maxVal = stationData.aggregate(
+            Max('value'))['value__max']
+        avgVal = stationData.aggregate(
+            Avg('value'))['value__avg']
+        data.append({
+            'name': f'{station.location.city.name}, {station.location.state.name}, {station.location.country.name}',
+            'lat': station.location.lat,
+            'lng': station.location.lng,
+            'population': stations.count(),
+            'min': minVal if minVal != None else 0,
+            'max': maxVal if maxVal != None else 0,
+            'avg': round(avgVal if avgVal != None else 0, 2),
+        })
 
     for location in locations:
         stations = Station.objects.filter(location=location)
@@ -835,6 +865,7 @@ def get_data_map_json(request, **kwargs):
     endFormatted = end.strftime("%d/%m/%Y") if end != None else " "
 
     data_result["locations"] = [loc.str() for loc in locations]
+    data_result["stations"]  = [loc.str() for loc in stations]
     data_result["start"] = startFormatted
     data_result["end"] = endFormatted
     data_result["data"] = data
