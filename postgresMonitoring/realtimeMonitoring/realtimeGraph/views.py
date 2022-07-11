@@ -673,3 +673,79 @@ Filtro para formatear datos en los templates
 @ register.filter
 def add_str(str1, str2):
     return str1 + str2
+
+
+
+def get_map_json_data(request, **kwargs):
+    data_result = {}
+
+    measureParam = kwargs.get("measure", None)
+    measurements = Measurement.objects.all()
+    selectedMeasure = None
+    measurements = Measurement.objects.all()
+    stations = Station.objects.filter(active=True)
+
+    if measureParam != None:
+        selectedMeasure = Measurement.objects.filter(name=measureParam)[0]
+    elif measurements.count() > 0:
+        selectedMeasure = measurements[0]    
+
+    try:
+        start = datetime.fromtimestamp(
+            float(request.GET.get("from", None)) / 1000
+        )
+    except:
+        start = None
+    try:
+        end = datetime.fromtimestamp(
+            float(request.GET.get("to", None)) / 1000)
+    except:
+        end = None
+    if start == None and end == None:
+        start = datetime.now(2021, 6, 1)
+        start = start - dateutil.relativedelta.relativedelta(weeks=1)
+        end = datetime.now(2021, 7, 1)
+        end += dateutil.relativedelta.relativedelta(days=1)
+    elif end == None:
+        end = datetime.now(2021, 7, 1)
+    elif start == None:
+        start = datetime.now(2021, 6, 1)
+
+    data = []
+
+    for stations in stations:
+        dataMeasure = []
+        for measures in  Measurement:
+            stationsData = Data.objects.filter(
+                station__in=stations, measurement__name=selectedMeasure.name,  time__gte=start.date(), time__lte=end.date()
+            )
+                
+        if stationsData.count() <= 0:
+            continue
+        minVal = stationsData.aggregate(
+            Min('value'))['value__min']
+        maxVal = stationsData.aggregate(
+            Max('value'))['value__max']
+        avgVal = stationsData.aggregate(
+            Avg('value'))['value__avg']
+        data.append({
+            'name': f'{stations.city.name}, {stations.state.name}, {stations.country.name}',
+            'lat': stations.lat,
+            'lng': stations.lng,
+            'population': stations.count(),
+            'min': minVal if minVal != None else 0,
+            'max': maxVal if maxVal != None else 0,
+            'avg': round(avgVal if avgVal != None else 0, 2),
+        })
+
+    startFormatted = start.strftime("%d/%m/%Y") if start != None else " "
+    endFormatted = end.strftime("%d/%m/%Y") if end != None else " "
+
+    data_result["stations"] = [loc.str() for loc in stations]
+    data_result["start"] = startFormatted
+    data_result["end"] = endFormatted
+    data_result["data"] = data
+
+    return JsonResponse(data_result)
+
+
