@@ -715,6 +715,12 @@ def get_data_map_json(request, **kwargs):
     data = []
     for station in stations:
         stations = Station.objects.filter(station=station)
+        stationData = Data.objects.filter(
+            station__in=stations, 
+            measurement__name=selectedMeasure.name,  
+            time__gte=start.date(), 
+            time__lte=end.date())
+
 
     for location in locations:
         stations = Station.objects.filter(location=location)
