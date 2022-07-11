@@ -768,6 +768,7 @@ def get_data_map_json(request, **kwargs):
     endFormatted = end.strftime("%d/%m/%Y") if end != None else " "
 
     data_result["locations"] = [loc.str() for loc in locations]
+    data_result["stations"]  = [loc.str() for loc in stations]
     data_result["start"] = startFormatted
     data_result["end"] = endFormatted
     data_result["data"] = data
