@@ -676,7 +676,7 @@ def add_str(str1, str2):
 
 
 
-def get_map_json_data(request, **kwargs):
+def get_data_map_json(request, **kwargs):
     data_result = {}
 
     measureParam = kwargs.get("measure", None)
