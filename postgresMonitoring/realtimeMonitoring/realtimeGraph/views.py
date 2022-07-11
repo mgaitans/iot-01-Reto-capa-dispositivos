@@ -687,8 +687,9 @@ def get_data_map_json(request, **kwargs):
         selectedMeasure = Measurement.objects.filter(name=measureParam)[0]
     elif measurements.count() > 0:
         selectedMeasure = measurements[0]
-
     locations = Location.objects.all()
+    stations  = Station.objects.all()
+    
     try:
         start = datetime.fromtimestamp(
             float(request.GET.get("from", None)) / 1000
@@ -716,7 +717,10 @@ def get_data_map_json(request, **kwargs):
     for location in locations:
         stations = Station.objects.filter(location=location)
         locationData = Data.objects.filter(
-            station__in=stations, measurement__name=selectedMeasure.name,  time__gte=start.date(), time__lte=end.date())
+            station__in=stations, 
+            measurement__name=selectedMeasure.name,  
+            time__gte=start.date(), 
+            time__lte=end.date())
         if locationData.count() <= 0:
             continue
         minVal = locationData.aggregate(
