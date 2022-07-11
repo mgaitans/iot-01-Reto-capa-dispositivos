@@ -16,4 +16,4 @@ urlpatterns = [
          download_csv_data, name='historical-data'),
     path("Data_mapJson/", get_data_map_json, name="Data_mapJson"),
     path("Data_mapJson/<str:measure>", get_data_map_json, name="Data_mapJson"),
-]
+] 

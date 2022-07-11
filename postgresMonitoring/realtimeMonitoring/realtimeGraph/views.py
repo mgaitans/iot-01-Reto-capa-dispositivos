@@ -701,14 +701,14 @@ def get_data_map_json(request, **kwargs):
     except:
         end = None
     if start == None and end == None:
-        start = datetime.now()
+        start = datetime.now(2021, 6, 1)
         start = start - dateutil.relativedelta.relativedelta(weeks=1)
-        end = datetime.now()
+        end = datetime.now(2021, 6, 30)
         end += dateutil.relativedelta.relativedelta(days=1)
     elif end == None:
-        end = datetime.now()
+        end = datetime.now(2021, 6, 30)
     elif start == None:
-        start = datetime.fromtimestamp(0)
+        start = datetime.now(2021, 6, 1)
 
     data = []
 
