@@ -689,7 +689,7 @@ def get_data_map_json(request, **kwargs):
         selectedMeasure = measurements[0]
     locations = Location.objects.all()
     stations  = Station.objects.all()
-    
+
     try:
         start = datetime.fromtimestamp(
             float(request.GET.get("from", None)) / 1000
@@ -713,6 +713,8 @@ def get_data_map_json(request, **kwargs):
     
 
     data = []
+    for station in stations:
+        stations = Station.objects.filter(station=station)
 
     for location in locations:
         stations = Station.objects.filter(location=location)
