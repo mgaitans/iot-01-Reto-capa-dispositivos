@@ -730,6 +730,16 @@ def get_data_map_json(request, **kwargs):
         avgVal = stationData.aggregate(
             Avg('value'))['value__avg']
 
+        data.append({
+            'name': f'{station.city.name}, {station.state.name}, {station.country.name}',
+            'lat': station.lat,
+            'lng': station.lng,
+            'population': stations.count(),
+            'min': minVal if minVal != None else 0,
+            'max': maxVal if maxVal != None else 0,
+            'avg': round(avgVal if avgVal != None else 0, 2),
+        })
+
 
     for location in locations:
         stations = Station.objects.filter(location=location)
