@@ -704,10 +704,10 @@ def get_map_json_data(request, **kwargs):
     if start == None and end == None:
         start = datetime.now(2021, 6, 1)
         start = start - dateutil.relativedelta.relativedelta(weeks=1)
-        end = datetime.now(2021, 7, 1)
+        end = datetime.now(2021, 6, 30)
         end += dateutil.relativedelta.relativedelta(days=1)
     elif end == None:
-        end = datetime.now(2021, 7, 1)
+        end = datetime.now(2021, 6, 30)
     elif start == None:
         start = datetime.now(2021, 6, 1)
 
