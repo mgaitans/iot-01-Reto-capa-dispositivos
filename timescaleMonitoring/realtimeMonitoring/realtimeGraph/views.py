@@ -826,7 +826,7 @@ def get_data_map_json(request, **kwargs):
         avgVal = stationData.aggregate(Avg("avg_value"))["avg_value__avg"]
         data.append(
             {
-                "name": f"{station.city.name}, {station.state.name}, {station.country.name}",
+                "name": f"{station.location.city.name}, {station.location.state.name}, {station.location.country.name}",
                 "lat": station.lat,
                 "lng": station.lng,
                 "population": stations.count(),
