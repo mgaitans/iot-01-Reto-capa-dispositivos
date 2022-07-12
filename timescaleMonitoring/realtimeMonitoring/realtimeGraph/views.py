@@ -814,7 +814,30 @@ def get_data_map_json(request, **kwargs):
     
     data = []
 
-    
+    for station in stations:
+        stationData = Data.objects.filter(
+            station=station, 
+            measurement__name=selectedMeasure.name,  
+            time__gte=start.date(), 
+            time__lte=end.date())
+        
+        if stationData.count() <= 0:
+            continue
+        minVal = stationData.aggregate(
+            Min('value'))['value__min']
+        maxVal = stationData.aggregate(
+            Max('value'))['value__max']
+        avgVal = stationData.aggregate(
+            Avg('value'))['value__avg']
+        data.append({
+            'name': f'{station.location.city.name}, {station.location.state.name}, {station.location.country.name}',
+            'lat': station.location.lat,
+            'lng': station.location.lng,
+            'population': stations.count(),
+            'min': minVal if minVal != None else 0,
+            'max': maxVal if maxVal != None else 0,
+            'avg': round(avgVal if avgVal != None else 0, 2),
+        })
 
     for location in locations:
         stations = Station.objects.filter(location=location)
@@ -842,7 +865,7 @@ def get_data_map_json(request, **kwargs):
     endFormatted = end.strftime("%d/%m/%Y") if end != None else " "
 
     data_result["locations"] = [loc.str() for loc in locations] 
-    
+
     data_result["start"] = startFormatted
     data_result["end"] = endFormatted
     data_result["data"] = data
