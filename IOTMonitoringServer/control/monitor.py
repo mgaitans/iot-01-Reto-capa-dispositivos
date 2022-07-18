@@ -16,7 +16,7 @@ def analyze_data():
     # Compara el promedio con los valores límite que están en la base de datos para esa variable.
     # Si el promedio se excede de los límites, se envia un mensaje de alerta.
 
-    print("Calculando alertas...")
+    print("Lectura de las Alertas...")
 
     data = Data.objects.filter(
         base_time__gte=datetime.now() - timedelta(hours=1))
@@ -33,6 +33,9 @@ def analyze_data():
                 'station__location__state__name',
                 'station__location__country__name')
     alerts = 0
+    aler_temperatura = 0
+    aler_humedad = 0
+    aler_luminosidad = 0
     for item in aggregation:
         alert = False
 
@@ -47,6 +50,15 @@ def analyze_data():
 
         if item["check_value"] > max_value or item["check_value"] < min_value:
             alert = True
+            aler_temperatura = 1
+        
+        if item["check_value"] > max_value or item["check_value"] < min_value:
+            alert = True
+            aler_humedad = 1
+        
+        if item["check_value"] > max_value or item["check_value"] < min_value:
+            alert = True
+            aler_luminosidad = 1
 
         if alert:
             message = "ALERT {} {} {}".format(variable, min_value, max_value)
@@ -54,10 +66,14 @@ def analyze_data():
             print(datetime.now(), "Sending alert to {} {}".format(topic, variable))
             client.publish(topic, message)
             alerts += 1
+        
+            
 
     print(len(aggregation), "dispositivos revisados")
     print(alerts, "alertas enviadas")
 
+    if aler_temperatura==1:
+        print("Aleta enviada por luminosidad", min_value, max_value)
 
 def on_connect(client, userdata, flags, rc):
     '''
