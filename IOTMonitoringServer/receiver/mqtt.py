@@ -13,7 +13,8 @@ def on_message(client: mqtt.Client, userdata, message: mqtt.MQTTMessage):
     Recibe el mensaje con formato:
         {
             "variable1": mediciónVariable1,
-            "variable2": mediciónVariable2
+            "variable2": mediciónVariable2,
+            "variable2": mediciónVariable3
         }
     en un tópico con formato:
         pais/estado/ciudad/usuario
