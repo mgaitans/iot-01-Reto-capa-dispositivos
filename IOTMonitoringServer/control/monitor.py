@@ -72,8 +72,15 @@ def analyze_data():
     print(len(aggregation), "dispositivos revisados")
     print(alerts, "alertas enviadas")
 
+    if aler_luminosidad==1:
+        print("Alerta enviada por luminosidad ", min_value, max_value)
+    
     if aler_temperatura==1:
-        print("Aleta enviada por luminosidad", min_value, max_value)
+        print("Alerta enviada por temperatura ", min_value, max_value)
+
+    if aler_humedad==1:
+        print("Alerta enviada por humedad ", min_value, max_value)
+        
 
 def on_connect(client, userdata, flags, rc):
     '''
